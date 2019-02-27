@@ -81,7 +81,7 @@ class CategoryViewController: UITableViewController {
             let newCategory = Category()
             newCategory.name = textField.text!
            
-            //self.categoryArray.append(newCategory)
+            //self.categories.append(newCategory)
             self.save(category: newCategory)
             
         }
@@ -129,7 +129,7 @@ class CategoryViewController: UITableViewController {
 
     func loadCategories(){
         
-        let categories = realm.objects(Category.self)
+        categories = realm.objects(Category.self)
        
         
         tableView.reloadData()

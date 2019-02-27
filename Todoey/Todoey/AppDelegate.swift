@@ -25,14 +25,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        data.name = "David"
 //        data.age = 12
         
-        do{
-            let realm = try Realm()
-//            try realm.write {
-//                realm.add(data)
-//            }
-        }catch {
-            print("Error initializing new realm, \(error)")
-        }
+//        do{
+////            let realm = try Realm()
+//            _ = try Realm()
+////            try realm.write {
+////                realm.add(data)
+////            }
+//        }catch {
+//            print("Error initializing new realm, \(error)")
+//        }
         
         return true
     }

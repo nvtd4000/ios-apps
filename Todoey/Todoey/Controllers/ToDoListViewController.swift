@@ -147,6 +147,7 @@ class ToDoListViewController: UITableViewController {
                     try self.realm.write{
                         let newItem = Item()
                         newItem.title = textField.text!
+                        newItem.dateCreated = Date()
                         currentCategory.items.append(newItem)
                     }
                 } catch{
@@ -218,7 +219,7 @@ class ToDoListViewController: UITableViewController {
 //    }
     
     func loadItems(){
-        itemArray = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
        
         
         tableView.reloadData()
@@ -226,16 +227,17 @@ class ToDoListViewController: UITableViewController {
 }
 //MARK: -SearchBar methods
 
-extension ToDoListViewController: UISearchBarDelegate{
+extension ToDoListViewController: UISearchBarDelegate{ 
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
-        
-        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-        request.predicate = predicate
-        
-        let sortDescription = NSSortDescriptor(key: "title", ascending: true)
-        request.sortDescriptors = [sortDescription]
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+//        let request : NSFetchRequest<Item> = Item.fetchRequest()
+//
+//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+//        request.predicate = predicate
+//
+//        let sortDescription = NSSortDescriptor(key: "title", ascending: true)
+//        request.sortDescriptors = [sortDescription]
         
 //        do{
 //            itemArray = try context.fetch(request)
@@ -243,8 +245,8 @@ extension ToDoListViewController: UISearchBarDelegate{
 //            print("Error fetching data from context \(error)")
 //        }
         
-        loadItems(with: request)
-       
+//        loadItems(with: request)
+       tableView.reloadData()
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
