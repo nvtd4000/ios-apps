@@ -9,11 +9,13 @@
 import UIKit
 //import CoreData
 import RealmSwift
+import ChameleonFramework
 
-class ToDoListViewController: UITableViewController {
+class ToDoListViewController: SwipeTableViewController {
     
     let realm = try! Realm()
     
+    @IBOutlet weak var searchBar: UISearchBar!
     var todoItems : Results<Item>?
     var selectedCategory: Category? {
         didSet{
@@ -27,15 +29,15 @@ class ToDoListViewController: UITableViewController {
 //    let paths = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)
     
     
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    //let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         //file path
-        let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
-        print(dataFilePath)
-        let paths = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)
-        print(paths[0])
+//        let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+//        print(dataFilePath)
+//        let paths = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)
+//        print(paths[0])
         // Do any additional setup after loading the view, typically from a nib.
         //print(paths[0])
 //        let newItem = Item()
@@ -52,10 +54,39 @@ class ToDoListViewController: UITableViewController {
         
         //loadItems(with: Item.fetchRequest())
         loadItems()
+        
+        tableView.separatorStyle = .none
+        
+        
 //        if let items = defaults.array(forKey: "TodoListArray") as? [Item]{
 //            itemArray = items
 //        }
         
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        //navigationController?.navigationBar.barTintColor = UIColor(hexString: colorHex)
+        guard let navBar = navigationController?.navigationBar else {fatalError("Navigation controller does not exist")}
+        
+        guard let colorHex = selectedCategory?.color else { fatalError()}
+        
+        title = selectedCategory?.name
+        
+        
+        guard let navBarColor = UIColor(hexString: colorHex) else{fatalError()}
+            
+        
+        navBar.barTintColor = UIColor(hexString: colorHex)
+        searchBar.barTintColor = UIColor(hexString: colorHex)
+        navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+        navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: ContrastColorOf(navBarColor, returnFlat: true)]
+        
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        navigationController?.navigationBar.barTintColor = UIColor(hexString: "1D9BF6")
+        navigationController?.navigationBar.tintColor = FlatWhite()
+        navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: FlatWhite()]
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -64,13 +95,21 @@ class ToDoListViewController: UITableViewController {
     
    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+       let cell = super.tableView(tableView, cellForRowAt: indexPath)
 //
 //
 //        cell.accessoryType = todoItems[indexPath.row].done ? .checkmark : .none
 //
         if let item = todoItems?[indexPath.row] {
             cell.textLabel?.text = item.title
+            
+            if let color = UIColor(hexString: selectedCategory!.color)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems!.count)){
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
+            
+            
+            
             cell.accessoryType = item.done ? .checkmark : .none
         }else{
             cell.textLabel?.text = "No Item Added"
@@ -169,22 +208,22 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    func saveItems(){
-//        let encoder = PropertyListEncoder()
-        
-        do{
-//            let data = try encoder.encode(self.itemArray)
-//            try data.write(to: self.dataFilePath!)
-            
-            //Core data
-            try context.save();
-        } catch{
-//            print("Error encoding item array, \(error)")
-            print("Error saving context, \(error)")
-        }
-        
-        self.tableView.reloadData()
-    }
+//    func saveItems(){
+////        let encoder = PropertyListEncoder()
+//
+//        do{
+////            let data = try encoder.encode(self.itemArray)
+////            try data.write(to: self.dataFilePath!)
+//
+//            //Core data
+//            try context.save();
+//        } catch{
+////            print("Error encoding item array, \(error)")
+//            print("Error saving context, \(error)")
+//        }
+//
+//        self.tableView.reloadData()
+//    }
     
 //    func loadItems(){
 //
@@ -223,6 +262,19 @@ class ToDoListViewController: UITableViewController {
        
         
         tableView.reloadData()
+    }
+    
+    override func updateModel(at indexPath: IndexPath) {
+        if let item = todoItems?[indexPath.row]{
+            do{
+                try realm.write {
+                    realm.delete(item)
+                }
+            }catch {
+                print("Error in deleting item, \(error)")
+            }
+            
+        }
     }
 }
 //MARK: -SearchBar methods
